@@ -147,7 +147,9 @@ index is fine — every unknown ticker just hits EDGAR once.
 All editable inputs live in `config/`:
 - `config/funds.json` — seed list of tracked funds (cik + series_id).
 - `config/sic_to_sector.json` — curated SIC → coarse sector map.
+- `config/sector_overrides.json` — per-CIK sector overrides for SIC-vs-GICS mismatches.
 - `config/seed_tickers.json` — extra tickers to publish in the registry.
+- `config/cit_substitutions.json` — opaque 401(k) Collective Investment Trusts → public-fund equivalents for X-ray substitution.
 
 Edgartools resolves tickers from CUSIPs internally; CUSIPs are not propagated
 past `nport.py` and are never written to disk.
