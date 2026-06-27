@@ -1,0 +1,108 @@
+name: Update Holdings
+
+on:
+  schedule:
+    # Mondays 06:00 UTC. N-PORT-P filings drop quarterly with 60-day lag,
+    # so weekly is generous; adjust to monthly once the universe is stable.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-holdings
+  cancel-in-progress: false
+
+env:
+  TOTAL_SHARDS: 5
+
+jobs:
+  extract:
+    name: Extract (shard ${{ matrix.shard }}/${{ vars.TOTAL_SHARDS || 5 }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Run pipeline shard
+        env:
+          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
+          OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}
+        run: |
+          nix develop -c python -m pipeline.run_shard \
+            --shard ${{ matrix.shard }} \
+            --total-shards ${{ env.TOTAL_SHARDS }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holdings-shard-${{ matrix.shard }}
+          path: data/holdings/
+          if-no-files-found: warn
+          retention-days: 7
+
+  commit:
+    name: Sync to fund-extracts
+    needs: extract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: holdings-shard-*
+          path: data/holdings/
+          merge-multiple: true
+
+      - name: Inspect merged output
+        run: |
+          if [ ! -d data/holdings ] || [ -z "$(ls -A data/holdings 2>/dev/null)" ]; then
+            echo "No data/holdings produced — nothing to sync"
+            exit 0
+          fi
+          echo "Files produced this run:"
+          find data/holdings -type f | head -20
+          du -sh data/holdings/
+
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build manifest
+        env:
+          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
+        run: |
+          nix develop -c python -m pipeline.build_manifest
+
+      - name: Check out fund-extracts (data repo)
+        uses: actions/checkout@v4
+        with:
+          repository: vizfolio/fund-extracts
+          ssh-key: ${{ secrets.FUND_DATA_REPO_DEPLOY_KEY }}
+          path: fund-extracts
+
+      - name: Sync and push to fund-extracts
+        run: |
+          # NOT using rsync --delete. A fund that fails its shard one
+          # week would otherwise lose all its prior snapshots. We accept
+          # some cruft accumulating in exchange for safety.
+          mkdir -p fund-extracts/holdings
+          rsync -a data/holdings/ fund-extracts/holdings/
+          cp data/funds.json fund-extracts/funds.json
+          cd fund-extracts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add holdings/ funds.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit to fund-extracts"
+          else
+            git commit -m "Update holdings $(date -u +%Y-%m-%d)"
+            git push
+          fi
