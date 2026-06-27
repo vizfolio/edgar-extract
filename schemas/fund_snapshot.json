@@ -1,0 +1,736 @@
+{
+  "$defs": {
+    "CreditSpreadRisk": {
+      "additionalProperties": false,
+      "properties": {
+        "investment_grade": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PeriodBucket"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "non_investment_grade": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PeriodBucket"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "CreditSpreadRisk",
+      "type": "object"
+    },
+    "DebtBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "coupon_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coupon Kind"
+        },
+        "coupon_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coupon Rate"
+        },
+        "interest_payments_in_arrears": {
+          "default": false,
+          "title": "Interest Payments In Arrears",
+          "type": "boolean"
+        },
+        "is_contingent_convertible": {
+          "default": false,
+          "title": "Is Contingent Convertible",
+          "type": "boolean"
+        },
+        "is_default": {
+          "default": false,
+          "title": "Is Default",
+          "type": "boolean"
+        },
+        "is_mandatory_convertible": {
+          "default": false,
+          "title": "Is Mandatory Convertible",
+          "type": "boolean"
+        },
+        "maturity_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maturity Date"
+        }
+      },
+      "title": "DebtBlock",
+      "type": "object"
+    },
+    "FeesSourceFiling": {
+      "additionalProperties": false,
+      "properties": {
+        "accession_no": {
+          "title": "Accession No",
+          "type": "string"
+        },
+        "filing_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filing Date"
+        },
+        "source_url": {
+          "title": "Source Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "accession_no",
+        "source_url"
+      ],
+      "title": "FeesSourceFiling",
+      "type": "object"
+    },
+    "Fund": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "cash_not_in_portfolio_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cash Not In Portfolio Usd"
+        },
+        "credit_spread_risk": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CreditSpreadRisk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dropped_holdings_count": {
+          "default": 0,
+          "title": "Dropped Holdings Count",
+          "type": "integer"
+        },
+        "dropped_weight": {
+          "default": 0.0,
+          "title": "Dropped Weight",
+          "type": "number"
+        },
+        "fees_source_filings": {
+          "items": {
+            "$ref": "#/$defs/FeesSourceFiling"
+          },
+          "title": "Fees Source Filings",
+          "type": "array"
+        },
+        "interest_rate_risk": {
+          "items": {
+            "$ref": "#/$defs/InterestRateRisk"
+          },
+          "title": "Interest Rate Risk",
+          "type": "array"
+        },
+        "is_final_filing": {
+          "default": false,
+          "title": "Is Final Filing",
+          "type": "boolean"
+        },
+        "monthly_returns": {
+          "items": {
+            "$ref": "#/$defs/MonthlyReturn"
+          },
+          "title": "Monthly Returns",
+          "type": "array"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "net_assets_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Net Assets Usd"
+        },
+        "registrant_cik": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Cik"
+        },
+        "registrant_lei": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Lei"
+        },
+        "registrant_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Name"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "series_lei": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Series Lei"
+        },
+        "share_classes": {
+          "items": {
+            "$ref": "#/$defs/ShareClass"
+          },
+          "title": "Share Classes",
+          "type": "array"
+        },
+        "source_filing": {
+          "title": "Source Filing",
+          "type": "string"
+        },
+        "source_url": {
+          "title": "Source Url",
+          "type": "string"
+        },
+        "total_assets_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Assets Usd"
+        },
+        "total_liabs_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Liabs Usd"
+        }
+      },
+      "required": [
+        "series_id",
+        "as_of",
+        "source_filing",
+        "source_url"
+      ],
+      "title": "Fund",
+      "type": "object"
+    },
+    "Holding": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_cat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset Cat"
+        },
+        "balance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Balance"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "currency": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Currency"
+        },
+        "debt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DebtBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fair_value_level": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fair Value Level"
+        },
+        "fair_value_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fair Value Usd"
+        },
+        "is_fair_valued": {
+          "default": false,
+          "title": "Is Fair Valued",
+          "type": "boolean"
+        },
+        "is_restricted": {
+          "default": false,
+          "title": "Is Restricted",
+          "type": "boolean"
+        },
+        "isin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Isin"
+        },
+        "issuer_cat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issuer Cat"
+        },
+        "issuer_cik": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issuer Cik"
+        },
+        "lei": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lei"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "payoff_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payoff Profile"
+        },
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ticker"
+        },
+        "units": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Units"
+        },
+        "weight": {
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "weight"
+      ],
+      "title": "Holding",
+      "type": "object"
+    },
+    "InterestRateRisk": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "title": "Currency",
+          "type": "string"
+        },
+        "dv01": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PeriodBucket"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dv100": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PeriodBucket"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "currency"
+      ],
+      "title": "InterestRateRisk",
+      "type": "object"
+    },
+    "MonthlyReturn": {
+      "additionalProperties": false,
+      "properties": {
+        "class_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Class Id"
+        },
+        "month": {
+          "title": "Month",
+          "type": "string"
+        },
+        "return_pct": {
+          "title": "Return Pct",
+          "type": "number"
+        }
+      },
+      "required": [
+        "month",
+        "return_pct"
+      ],
+      "title": "MonthlyReturn",
+      "type": "object"
+    },
+    "PeriodBucket": {
+      "additionalProperties": false,
+      "description": "Time-bucketed risk metric (DV01, DV100, credit spread). All-null is\nvalid; the parent decides whether to emit the bucket at all.",
+      "properties": {
+        "10yr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "10Yr"
+        },
+        "1yr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "1Yr"
+        },
+        "30yr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "30Yr"
+        },
+        "3mo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "3Mo"
+        },
+        "5yr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "5Yr"
+        }
+      },
+      "title": "PeriodBucket",
+      "type": "object"
+    },
+    "ShareClass": {
+      "additionalProperties": false,
+      "properties": {
+        "class_id": {
+          "title": "Class Id",
+          "type": "string"
+        },
+        "expense_ratio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expense Ratio"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ticker"
+        }
+      },
+      "required": [
+        "class_id"
+      ],
+      "title": "ShareClass",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fund": {
+      "$ref": "#/$defs/Fund"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "holdings": {
+      "items": {
+        "$ref": "#/$defs/Holding"
+      },
+      "title": "Holdings",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "0.4",
+      "default": "0.4",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "generated_at",
+    "fund",
+    "holdings"
+  ],
+  "title": "FundSnapshot",
+  "type": "object"
+}

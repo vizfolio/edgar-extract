@@ -28,10 +28,10 @@ from pathlib import Path
 
 import requests
 
-from . import nport
+from . import models, nport
 
 MF_TICKERS_URL = "https://www.sec.gov/files/company_tickers_mf.json"
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = models.FUNDS_MANIFEST_SCHEMA_VERSION
 
 log = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
     log.info("%d series in SEC's MF index", len(by_series))
 
     snapshots_root = Path(args.snapshots)
-    funds_out: list[dict] = []
+    funds_out: list[models.FundEntry] = []
     missing = 0
     for f in seed:
         sid = f["series_id"]
@@ -116,25 +116,24 @@ def main(argv: list[str] | None = None) -> int:
             tickers.add(f["ticker"])
 
         funds_out.append(
-            {
-                "series_id": sid,
-                "name": f.get("name"),
-                "registrant_cik": f.get("cik"),
-                "tickers": sorted(tickers),
-                "latest_period": period,
-                "latest_accession": accession,
-            }
+            models.FundEntry(
+                series_id=sid,
+                name=f.get("name"),
+                registrant_cik=f.get("cik"),
+                tickers=sorted(tickers),
+                latest_period=period,
+                latest_accession=accession,
+            )
         )
 
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "funds": sorted(funds_out, key=lambda x: x["series_id"]),
-    }
+    manifest = models.FundsManifest(
+        generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        funds=sorted(funds_out, key=lambda x: x.series_id),
+    )
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(manifest, indent=2))
+    out.write_text(json.dumps(manifest.model_dump(mode="json"), indent=2))
     log.info(
         "wrote %s (%d funds, %d skipped — no snapshots)",
         out,

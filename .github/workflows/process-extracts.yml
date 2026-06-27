@@ -81,6 +81,10 @@ jobs:
         run: |
           nix develop -c python -m pipeline.build_manifest
 
+      - name: Regenerate JSON Schemas from pydantic models
+        run: |
+          nix develop -c python -m pipeline.schemas
+
       - name: Check out fund-extracts (data repo)
         uses: actions/checkout@v4
         with:
@@ -93,13 +97,14 @@ jobs:
           # NOT using rsync --delete. A fund that fails its shard one
           # week would otherwise lose all its prior snapshots. We accept
           # some cruft accumulating in exchange for safety.
-          mkdir -p fund-extracts/snapshots
+          mkdir -p fund-extracts/snapshots fund-extracts/schemas
           rsync -a data/snapshots/ fund-extracts/snapshots/
           cp data/funds.json fund-extracts/funds.json
+          cp schemas/fund_snapshot.json schemas/funds_manifest.json fund-extracts/schemas/
           cd fund-extracts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add snapshots/ funds.json
+          git add snapshots/ funds.json schemas/
           if git diff --cached --quiet; then
             echo "No changes to commit to fund-extracts"
           else
@@ -142,6 +147,15 @@ jobs:
             --seed-tickers config/seed_tickers.json \
             --out securities-extracts
 
+      - name: Regenerate JSON Schemas from pydantic models
+        run: |
+          nix develop -c python -m pipeline.schemas
+
+      - name: Copy security schema into securities-extracts
+        run: |
+          mkdir -p securities-extracts/schemas
+          cp schemas/security.json securities-extracts/schemas/
+
       - name: Inspect registry diff
         run: |
           cd securities-extracts
@@ -149,14 +163,14 @@ jobs:
           echo "Ticker index: $(jq 'length' by_ticker.json) entries"
           echo
           echo "Changes vs HEAD:"
-          git status --short by_cik/ by_ticker.json | head -20
+          git status --short by_cik/ by_ticker.json schemas/ | head -20
 
       - name: Commit and push to securities-extracts
         run: |
           cd securities-extracts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add by_cik/ by_ticker.json
+          git add by_cik/ by_ticker.json schemas/
           if git diff --cached --quiet; then
             echo "No changes to commit to securities-extracts"
           else

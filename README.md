@@ -133,11 +133,36 @@ The path defaults to `data-securities/by_ticker.json` already, so the
 CLI works without the flag once the registry is built. A missing
 index is fine — every unknown ticker just hits EDGAR once.
 
+### Schemas
+
+Every published artifact has a JSON Schema under `schemas/`, derived
+from pydantic models in `pipeline/models.py` (the single source of
+truth for wire shape):
+
+- `schemas/fund_snapshot.json` — per-fund quarterly snapshot
+- `schemas/funds_manifest.json` — root `funds.json` index
+- `schemas/security.json` — issuer record in the securities registry
+
+Regenerate after any model change:
+
+```bash
+nix develop -c python -m pipeline.schemas
+```
+
+CI also regenerates and copies them alongside the published data into
+`fund-extracts/schemas/` and `securities-extracts/schemas/`, so
+consumers get matching schema + data in a single pull. Schema version
+is pinned per model (`schema_version` field is a `Literal`), so a bump
+fails loudly on construction rather than silently corrupting output.
+
 ### Module layout
 
 - `pipeline/nport.py` — edgartools wrapper: find + parse NPORT-P filings.
 - `pipeline/mappings.py` — N-PORT enum codes → schema strings; SIC → sector.
-- `pipeline/transform.py` — intermediate dict → json output.
+- `pipeline/models.py` — pydantic models for all published artifacts.
+- `pipeline/schemas.py` — CLI: dump JSON Schemas from `models.py` into `schemas/`.
+- `pipeline/transform.py` — intermediate dict → `FundSnapshot` model → json output.
+- `pipeline/expenses.py` — fetch + parse 497K filings for per-class expense ratios.
 - `pipeline/fetch_holdings.py` — CLI for one fund.
 - `pipeline/run_shard.py` — CLI for one shard of `funds.json` (used by CI).
 - `pipeline/build_manifest.py` — emits `data/funds.json`.

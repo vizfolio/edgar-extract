@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "SecuritySource": {
+      "additionalProperties": false,
+      "properties": {
+        "edgar_fetched_at": {
+          "title": "Edgar Fetched At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "edgar_fetched_at"
+      ],
+      "title": "SecuritySource",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "cik": {
+      "title": "Cik",
+      "type": "string"
+    },
+    "country": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Country"
+    },
+    "entity_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Entity Type"
+    },
+    "exchanges": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Exchanges",
+      "type": "array"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "schema_version": {
+      "const": "0.1",
+      "default": "0.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sector": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sector"
+    },
+    "sic": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sic"
+    },
+    "sic_description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sic Description"
+    },
+    "source": {
+      "$ref": "#/$defs/SecuritySource"
+    },
+    "state_of_incorporation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "State Of Incorporation"
+    },
+    "tickers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tickers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "cik",
+    "source"
+  ],
+  "title": "Security",
+  "type": "object"
+}

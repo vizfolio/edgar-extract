@@ -15,12 +15,12 @@ from pathlib import Path
 
 import edgar
 
-from .. import mappings
+from .. import mappings, models
 from ..nport import _normalize_cik, user_agent
 
 log = logging.getLogger(__name__)
 
-REGISTRY_SCHEMA_VERSION = "0.1"
+REGISTRY_SCHEMA_VERSION = models.SECURITY_SCHEMA_VERSION
 
 _CONFIG_DIR = Path(__file__).resolve().parent.parent.parent / "config"
 
@@ -88,11 +88,11 @@ def derived_sector(cik: str | None, sic: str | None) -> str | None:
 
 
 def _dedupe(seq) -> list:
-    """Order-preserving dedupe."""
-    return list(dict.fromkeys(seq or []))
+    """Order-preserving dedupe; drops None/empty entries."""
+    return [x for x in dict.fromkeys(seq or []) if x]
 
 
-def normalize(record: dict) -> bool:
+def normalize(record: models.Security) -> bool:
     """Apply pure-local transforms to an existing record. Idempotent.
 
     Used by build_registry's in-place pass so config or logic changes
@@ -100,19 +100,20 @@ def normalize(record: dict) -> bool:
     Returns True if the record was mutated.
     """
     mutated = False
-    new_sector = derived_sector(record.get("cik"), record.get("sic"))
-    if new_sector != record.get("sector"):
-        record["sector"] = new_sector
+    new_sector = derived_sector(record.cik, record.sic)
+    if new_sector != record.sector:
+        record.sector = new_sector
         mutated = True
     for field in ("tickers", "exchanges"):
-        deduped = _dedupe(record.get(field) or [])
-        if deduped != (record.get(field) or []):
-            record[field] = deduped
+        current = getattr(record, field) or []
+        deduped = _dedupe(current)
+        if deduped != current:
+            setattr(record, field, deduped)
             mutated = True
     return mutated
 
 
-def enrich(cik: str | int) -> dict | None:
+def enrich(cik: str | int) -> models.Security | None:
     """Fetch and enrich a single CIK. Returns None if the CIK can't be
     resolved at EDGAR (deleted entity, malformed input)."""
     norm_cik = _normalize_cik(cik)
@@ -130,27 +131,26 @@ def enrich(cik: str | int) -> dict | None:
     data = company.data
     sic = data.sic or None
     sector = _SECTOR_OVERRIDES.get(norm_cik) or mappings.sic_to_sector(sic)
-    return {
-        "cik": norm_cik,
-        "name": data.name,
-        "sic": sic,
-        "sic_description": data.sic_description or None,
-        "sector": sector,
-        "country": _country(data),
-        "state_of_incorporation": data.state_of_incorporation or None,
-        "tickers": _dedupe(data.tickers),
-        "exchanges": _dedupe(data.exchanges),
-        "entity_type": data.entity_type or None,
-        "source": {
-            "edgar_fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        },
-        "schema_version": REGISTRY_SCHEMA_VERSION,
-    }
+    return models.Security(
+        cik=norm_cik,
+        name=data.name,
+        sic=sic,
+        sic_description=data.sic_description or None,
+        sector=sector,
+        country=_country(data),
+        state_of_incorporation=data.state_of_incorporation or None,
+        tickers=_dedupe(data.tickers),
+        exchanges=_dedupe(data.exchanges),
+        entity_type=data.entity_type or None,
+        source=models.SecuritySource(
+            edgar_fetched_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        ),
+    )
 
 
-def is_stale(record: dict, max_age_days: int) -> bool:
+def is_stale(record: models.Security, max_age_days: int) -> bool:
     """True if `record` is missing a fetch timestamp or older than max_age_days."""
-    fetched = record.get("source", {}).get("edgar_fetched_at")
+    fetched = record.source.edgar_fetched_at if record.source else None
     if not fetched:
         return True
     try:

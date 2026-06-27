@@ -26,7 +26,9 @@ import sys
 from pathlib import Path
 
 import edgar
+from pydantic import ValidationError
 
+from .. import models
 from ..nport import _normalize_cik, lookup_company_cik, user_agent
 from . import registry
 
@@ -97,45 +99,50 @@ def _resolve_seed_tickers(tickers: list[str]) -> set[str]:
     return out
 
 
-def _load_existing_records(by_cik_dir: Path) -> dict[str, dict]:
+def _load_existing_records(by_cik_dir: Path) -> dict[str, models.Security]:
     if not by_cik_dir.exists():
         return {}
-    out: dict[str, dict] = {}
+    out: dict[str, models.Security] = {}
     for path in by_cik_dir.glob("*.json"):
         try:
-            rec = json.loads(path.read_text())
+            raw = json.loads(path.read_text())
         except (OSError, json.JSONDecodeError) as e:
             log.warning("could not read existing record %s: %s", path, e)
             continue
-        cik = _normalize_cik(rec.get("cik")) or path.stem
+        try:
+            rec = models.Security.model_validate(raw)
+        except ValidationError as e:
+            log.warning("existing record %s failed schema validation: %s", path, e)
+            continue
+        cik = _normalize_cik(rec.cik) or path.stem
         out[cik] = rec
     return out
 
 
-def _write_record(by_cik_dir: Path, record: dict) -> None:
+def _write_record(by_cik_dir: Path, record: models.Security) -> None:
     by_cik_dir.mkdir(parents=True, exist_ok=True)
-    path = by_cik_dir / f"{record['cik']}.json"
+    path = by_cik_dir / f"{record.cik}.json"
     with open(path, "w") as f:
-        json.dump(record, f, indent=2, sort_keys=True)
+        json.dump(record.model_dump(mode="json"), f, indent=2, sort_keys=True)
         f.write("\n")
 
 
-def _build_ticker_index(records: dict[str, dict]) -> dict[str, str]:
+def _build_ticker_index(records: dict[str, models.Security]) -> dict[str, str]:
     """Build {ticker: cik}. When the same ticker shows on multiple records,
     prefer the one with a US listing.
     """
     out: dict[str, str] = {}
     collisions: list[tuple[str, str, str]] = []
     for cik, rec in records.items():
-        for ticker in rec.get("tickers") or []:
+        for ticker in rec.tickers or []:
             t = ticker.upper().strip()
             if not t:
                 continue
             if t in out and out[t] != cik:
                 # Prefer the record with a US country tag.
                 prev_cik = out[t]
-                prev = records.get(prev_cik, {})
-                if rec.get("country") == "US" and prev.get("country") != "US":
+                prev = records.get(prev_cik)
+                if rec.country == "US" and (prev is None or prev.country != "US"):
                     out[t] = cik
                 collisions.append((t, prev_cik, cik))
                 continue

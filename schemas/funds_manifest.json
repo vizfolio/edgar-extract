@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "FundEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "latest_accession": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest Accession"
+        },
+        "latest_period": {
+          "title": "Latest Period",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "registrant_cik": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Cik"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "tickers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tickers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "series_id",
+        "latest_period"
+      ],
+      "title": "FundEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "funds": {
+      "items": {
+        "$ref": "#/$defs/FundEntry"
+      },
+      "title": "Funds",
+      "type": "array"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "generated_at",
+    "funds"
+  ],
+  "title": "FundsManifest",
+  "type": "object"
+}
