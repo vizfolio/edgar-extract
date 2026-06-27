@@ -1,4 +1,4 @@
-name: Update Funds
+name: Process Extracts
 
 on:
   schedule:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: update-funds
+  group: process-extracts
   cancel-in-progress: false
 
 env:
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: funds-shard-${{ matrix.shard }}
+          name: extracts-shard-${{ matrix.shard }}
           path: data/snapshots/
           if-no-files-found: warn
           retention-days: 7
@@ -58,7 +58,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: funds-shard-*
+          pattern: extracts-shard-*
           path: data/snapshots/
           merge-multiple: true
 
