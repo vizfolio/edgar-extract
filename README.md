@@ -1,11 +1,16 @@
-# Fund X-Ray
+# Vizfolio Edgar Extracts
 
-Local-first portfolio X-ray tool. See `context/START.md` for the full design.
+Extracted data from open Edgar data, for use in Vizfolio.
+
+See `docs/TERMINOLOGY.md` for the SEC form / identifier glossary, and
+`docs/DEFERRED_GAPS.md` for known schema gaps and what's still TODO.
 
 ## Pipeline (v0)
 
-Generates a json1-shaped holdings file for one fund by walking the latest
-SEC N-PORT-P filing via [edgartools](https://github.com/dgunning/edgartools).
+Generates json data files via [edgartools](https://github.com/dgunning/edgartools) including:
+* SEC N-PORT-P filings
+* 497K filings
+* Security information via the company's CIK
 
 ### Install
 
