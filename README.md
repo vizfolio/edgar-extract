@@ -32,7 +32,7 @@ nix develop -c python -m pipeline.fetch_holdings \
   --series-id S000002848
 ```
 
-Output: `data/holdings/{series_id}/{period_of_report}.json.gz` — one
+Output: `data/snapshots/{series_id}/{period_of_report}.json.gz` — one
 gzipped JSON snapshot per fund per quarter, keyed by N-PORT
 `period_of_report`. Re-runs are no-ops unless EDGAR has a newer filing
 accession for the same period (e.g. NPORT-P/A amendments).

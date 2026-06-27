@@ -1,7 +1,7 @@
 """CLI entry: emit one fund's latest N-PORT to a date-keyed JSON snapshot.
 
 Layout:
-    data/holdings/{series_id}/{period_of_report}.json.gz
+    data/snapshots/{series_id}/{period_of_report}.json.gz
 
 Each snapshot is the full holdings file for a single quarter end. The
 runtime manifest (`data/funds.json`, built separately by
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate a snapshot for one fund.")
     parser.add_argument("--cik", required=True, help="SEC CIK (e.g. 0000036405)")
     parser.add_argument("--series-id", required=True, help="SEC series ID")
-    parser.add_argument("--out", default="data/holdings", help="Output root")
+    parser.add_argument("--out", default="data/snapshots", help="Output root")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 

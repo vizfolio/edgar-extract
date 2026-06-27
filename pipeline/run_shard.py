@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--funds-file", default="pipeline/funds.json")
     p.add_argument("--shard", type=int, required=True)
     p.add_argument("--total-shards", type=int, required=True)
-    p.add_argument("--out", default="data/holdings")
+    p.add_argument("--out", default="data/snapshots")
     args = p.parse_args(argv)
 
     logging.basicConfig(
