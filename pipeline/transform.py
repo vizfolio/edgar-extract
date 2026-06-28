@@ -22,8 +22,11 @@ SCHEMA_VERSION = models.FUND_SNAPSHOT_SCHEMA_VERSION
 
 
 def _holding(h: dict) -> models.Holding:
-    asset_cat = mappings.asset_cat(h.get("asset_cat_code"))
-    debt = h.get("debt") if asset_cat == "debt" else None
+    asset_cat_code = h.get("asset_cat_code")
+    asset_class = mappings.asset_class(asset_cat_code)
+    if asset_class == "other" and mappings.is_cash_by_name(h.get("name")):
+        asset_class = "cash"
+    debt = h.get("debt") if asset_class == "debt" else None
     return models.Holding(
         ticker=h.get("ticker"),
         isin=h.get("isin"),
@@ -34,7 +37,8 @@ def _holding(h: dict) -> models.Holding:
         fair_value_usd=h.get("val_usd"),
         balance=h.get("balance"),
         units=h.get("units"),
-        asset_cat=asset_cat,
+        asset_category=asset_cat_code,
+        asset_class=asset_class,
         issuer_cat=mappings.issuer_cat(h.get("issuer_cat_code")),
         country=h.get("inv_country"),
         currency=h.get("cur_cd"),
@@ -68,6 +72,14 @@ def to_json1(parsed: dict) -> dict:
             dropped_count,
             dropped_weight,
         )
+
+    # will revisit — expand alongside X-ray coverage badge work
+    # cash_in_portfolio_weight = sum(
+    #     h.weight for h in holdings_out if h.asset_class == "cash"
+    # )
+    # categorized_weight = sum(
+    #     h.weight for h in holdings_out if h.asset_class not in ("other", None)
+    # )
 
     fund = models.Fund(
         name=fund_in.get("name"),

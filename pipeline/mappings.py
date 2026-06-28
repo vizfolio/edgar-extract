@@ -10,6 +10,7 @@ it stays diffable / PR-reviewable rather than buried in code.
 """
 
 import json
+import re
 from pathlib import Path
 
 _CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
@@ -38,10 +39,10 @@ _ASSET_CAT = {
     "DCO": "derivative",
     "DFE": "derivative",
     "DOT": "derivative",
-    "STIV": "other",
-    "RA": "other",
-    "COMD": "other",
-    "RE": "other",
+    "STIV": "cash",
+    "RA": "cash",
+    "COMD": "commodity",
+    "RE": "real_estate",
     "OTH": "other",
     "OTHER": "other",
 }
@@ -64,10 +65,29 @@ _ISSUER_CAT = {
 }
 
 
-def asset_cat(code: str | None) -> str:
+# Holdings whose N-PORT assetCat code is missing or OTH may still be
+# identifiable as cash by name. Patterns cover Vanguard's internal
+# liquidity fund, government money-market funds, and generic cash vehicles.
+_CASH_NAME_RE = re.compile(
+    r"market\s+liquidity\s+fund"
+    r"|government\s+money"
+    r"|money\s+market"
+    r"|cash\s+management"
+    r"|treasury\s+fund",
+    re.IGNORECASE,
+)
+
+
+def asset_class(code: str | None) -> str:
     if not code:
         return "other"
     return _ASSET_CAT.get(code.upper(), "other")
+
+
+def is_cash_by_name(name: str | None) -> bool:
+    if not name:
+        return False
+    return bool(_CASH_NAME_RE.search(name))
 
 
 def issuer_cat(code: str | None) -> str:

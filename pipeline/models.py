@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # Schema version constants. Bump in lockstep with the corresponding builder.
 # ---------------------------------------------------------------------------
 
-FUND_SNAPSHOT_SCHEMA_VERSION = "0.4"
+FUND_SNAPSHOT_SCHEMA_VERSION = "0.5"
 FUNDS_MANIFEST_SCHEMA_VERSION = "1"
 SECURITY_SCHEMA_VERSION = "0.1"
 
@@ -68,7 +68,8 @@ class Holding(_Strict):
     fair_value_usd: Optional[float] = None
     balance: Optional[float] = None
     units: Optional[str] = None
-    asset_cat: Optional[str] = None
+    asset_category: Optional[str] = None
+    asset_class: Optional[str] = None
     issuer_cat: Optional[str] = None
     country: Optional[str] = None
     currency: Optional[str] = None
@@ -126,6 +127,9 @@ class Fund(_Strict):
     is_final_filing: bool = False
     dropped_holdings_count: int = 0
     dropped_weight: float = 0.0
+    # will revisit — expand alongside X-ray coverage badge work
+    # cash_in_portfolio_weight: float = 0.0
+    # categorized_weight: float = 0.0
     interest_rate_risk: list[InterestRateRisk] = Field(default_factory=list)
     credit_spread_risk: Optional[CreditSpreadRisk] = None
     monthly_returns: list[MonthlyReturn] = Field(default_factory=list)
@@ -134,7 +138,7 @@ class Fund(_Strict):
 
 
 class FundSnapshot(_Strict):
-    schema_version: Literal["0.4"] = FUND_SNAPSHOT_SCHEMA_VERSION
+    schema_version: Literal["0.5"] = FUND_SNAPSHOT_SCHEMA_VERSION
     generated_at: str
     fund: Fund
     holdings: list[Holding]

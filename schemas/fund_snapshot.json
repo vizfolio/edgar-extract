@@ -317,7 +317,7 @@
     "Holding": {
       "additionalProperties": false,
       "properties": {
-        "asset_cat": {
+        "asset_category": {
           "anyOf": [
             {
               "type": "string"
@@ -327,7 +327,19 @@
             }
           ],
           "default": null,
-          "title": "Asset Cat"
+          "title": "Asset Category"
+        },
+        "asset_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset Class"
         },
         "balance": {
           "anyOf": [
@@ -720,8 +732,8 @@
       "type": "array"
     },
     "schema_version": {
-      "const": "0.4",
-      "default": "0.4",
+      "const": "0.5",
+      "default": "0.5",
       "title": "Schema Version",
       "type": "string"
     }
