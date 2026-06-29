@@ -11,11 +11,23 @@
       let
         pkgs = import nixpkgs { inherit system; };
         python = pkgs.python312;
+
+        add-funds = pkgs.writeShellScriptBin "add-funds" ''
+          exec python ${toString ./.}/add_funds.py "$@"
+        '';
       in {
+        packages.add-funds = add-funds;
+
+        apps.add-funds = {
+          type = "app";
+          program = "${add-funds}/bin/add-funds";
+        };
+
         devShells.default = pkgs.mkShell {
           packages = [
             python
             pkgs.uv
+            add-funds
           ];
 
           # pip wheels for numpy/pyarrow/lxml expect libstdc++, libz, etc.

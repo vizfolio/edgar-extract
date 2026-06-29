@@ -16,5 +16,59 @@
     "cik": "0000036405",
     "series_id": "S000002839",
     "name": "Vanguard 500 Index Fund"
+  },
+  {
+    "ticker": "VXUS",
+    "cik": "0000736054",
+    "series_id": "S000002932",
+    "name": "Vanguard Total International Stock Index Fund"
+  },
+  {
+    "ticker": "VGSLX",
+    "cik": "0000734383",
+    "series_id": "S000002924",
+    "name": "Vanguard Real Estate Index Fund"
+  },
+  {
+    "ticker": "VMFXX",
+    "cik": "0000106830",
+    "series_id": "S000004462",
+    "name": "Vanguard Federal Money Market Fund"
+  },
+  {
+    "ticker": "VUSXX",
+    "cik": "0000891190",
+    "series_id": "S000002233",
+    "name": "Vanguard Treasury Money Market Fund"
+  },
+  {
+    "ticker": "SCHD",
+    "cik": "0001454889",
+    "series_id": "S000034163",
+    "name": "Schwab U.S. Dividend Equity ETF"
+  },
+  {
+    "ticker": "VBR",
+    "cik": "0000036405",
+    "series_id": "S000002847",
+    "name": "Vanguard Small-Cap Value Index Fund"
+  },
+  {
+    "ticker": "VEA",
+    "cik": "0000923202",
+    "series_id": "S000004386",
+    "name": "Vanguard Developed Markets Index Fund"
+  },
+  {
+    "ticker": "VB",
+    "cik": "0000036405",
+    "series_id": "S000002845",
+    "name": "Vanguard Small-Cap Index Fund"
+  },
+  {
+    "ticker": "VTEB",
+    "cik": "0000225997",
+    "series_id": "S000048568",
+    "name": "Vanguard Tax-Exempt Bond Index Fund"
   }
 ]
