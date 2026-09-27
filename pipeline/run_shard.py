@@ -1,8 +1,8 @@
 """Run the pipeline for one shard of config/funds.json.
 
 Used by the GitHub Actions matrix to parallelize across funds. Per-fund
-failures are logged but don't fail the shard — partial results are
-still committed by the downstream job.
+failures don't stop the shard, but it exits non-zero at the end if any
+fund failed. Partial results are still committed by the downstream job.
 """
 
 from __future__ import annotations
@@ -60,7 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     for f, err in failures:
         log.warning("  failed: %s — %s", f.get("ticker") or f["series_id"], err)
 
-    return 0
+    # Non-zero so the run shows red. The workflow still uploads and
+    # publishes whatever succeeded; build_manifest keeps prior entries
+    # for failed funds.
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

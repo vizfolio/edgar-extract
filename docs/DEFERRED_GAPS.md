@@ -1,6 +1,6 @@
 # Deferred Data Gaps
 
-Things we know are missing from the schema v0.4 output and chose not to
+Things we know are missing from the schema v0.5 output and chose not to
 build yet. Listed in rough priority order for a frontend that wants
 transaction import, bond/REIT support, and richer fund-level metadata.
 
@@ -94,31 +94,31 @@ expense ratio, with `{accession_no, filing_date, source_url}`.
 
 ---
 
-## 4. Cash & residual reconciliation
+## 4. Cash & residual reconciliation — **RESOLVED** (schema v0.5)
 
-**What we have.** `dropped_holdings_count` + `dropped_weight` for things
+**What we had.** `dropped_holdings_count` + `dropped_weight` for things
 we couldn't identify, and `cash_not_in_portfolio_usd` (off-book cash).
 
-**What's missing.**
-- An explicit `cash_in_portfolio_weight` for cash *positions* the fund
-  reports as holdings (Vanguard Market Liquidity Fund, repos,
-  short-term treasuries) but which we currently classify as `other` or
-  `debt` with no special flag.
-- A `categorized_weight` = `1 - cash_pct - dropped_weight - unclassified`
-  so the frontend can put together an honest "X-ray covered N% of fund"
-  badge.
-
-**Approach.** Don't drop cash holdings — emit them with
-`asset_cat: "cash"` and an `is_cash: true` flag. Detect via:
-- name pattern (`*Market Liquidity Fund*`, `*Government Money*`)
-- asset_cat code `STIV` from N-PORT
-- repurchase agreements
+**Resolution.**
+- `STIV` (short-term investment vehicles) and `RA` (repurchase agreements)
+  now map to `asset_class: "cash"` via the N-PORT code.
+- Name-based fallback in `mappings.is_cash_by_name` catches holdings
+  coded `OTH` that are clearly cash vehicles (Market Liquidity Fund,
+  Government Money, Money Market, Cash Management, Treasury Fund patterns).
+  Override applies only when code-based group resolves to `"other"`.
+- `fund.cash_in_portfolio_weight`: sum of `holding.weight` where
+  `asset_class == "cash"`.
+- `fund.categorized_weight`: sum of weights for all emitted holdings
+  where `asset_class` is not `"other"`. Frontend X-ray badge
+  = `categorized_weight` (covers equity + debt + derivative + real_estate
+  + commodity + cash; excludes unclassified and dropped weight).
+- `is_cash` flag omitted — `asset_class == "cash"` is sufficient.
 
 ---
 
 ## 5. Derivatives detail
 
-**Current state.** We emit `asset_cat: "derivative"` and that's it.
+**Current state.** We emit `asset_class: "derivative"` and that's it.
 
 **For an X-ray:** for most US equity/bond funds, derivative weight is
 tiny (<1%). The big exception: currency-hedged share classes (where

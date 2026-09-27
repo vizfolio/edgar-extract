@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  # For the keepalive job (re-enables this workflow via the API).
+  actions: write
 
 concurrency:
   group: process-extracts
@@ -18,6 +20,21 @@ env:
   TOTAL_SHARDS: 5
 
 jobs:
+  keepalive:
+    # GitHub disables scheduled workflows after 60 days without repo
+    # activity. This repo rarely gets commits (the data goes to
+    # fund-extracts), so re-enable the workflow each run to reset the timer.
+    name: Keep schedule alive
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/process-extracts.yml/enable"
+
   extract:
     name: Extract (shard ${{ matrix.shard }}/${{ vars.TOTAL_SHARDS || 5 }})
     runs-on: ubuntu-latest
@@ -41,7 +58,10 @@ jobs:
             --shard ${{ matrix.shard }} \
             --total-shards ${{ env.TOTAL_SHARDS }}
 
+      # always(): a shard exits non-zero if any fund failed; still upload
+      # the funds that succeeded.
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: extracts-shard-${{ matrix.shard }}
           path: data/snapshots/
@@ -51,6 +71,8 @@ jobs:
   commit:
     name: Sync to fund-extracts
     needs: extract
+    # Publish partial results even when some shards report failed funds.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -75,12 +97,6 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Build manifest
-        env:
-          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
-        run: |
-          nix develop -c python -m pipeline.build_manifest
-
       - name: Regenerate JSON Schemas from pydantic models
         run: |
           nix develop -c python -m pipeline.schemas
@@ -92,14 +108,27 @@ jobs:
           ssh-key: ${{ secrets.FUND_DATA_REPO_DEPLOY_KEY }}
           path: fund-extracts
 
-      - name: Sync and push to fund-extracts
+      - name: Merge this run's snapshots into fund-extracts
         run: |
           # NOT using rsync --delete. A fund that fails its shard one
           # week would otherwise lose all its prior snapshots. We accept
           # some cruft accumulating in exchange for safety.
           mkdir -p fund-extracts/snapshots fund-extracts/schemas
           rsync -a data/snapshots/ fund-extracts/snapshots/
-          cp data/funds.json fund-extracts/funds.json
+
+      - name: Build manifest
+        env:
+          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
+        run: |
+          # Build from the merged data repo, not data/snapshots: the latter
+          # only holds this run's artifacts, so any fund that failed its
+          # shard would silently drop out of the manifest.
+          nix develop -c python -m pipeline.build_manifest \
+            --snapshots fund-extracts/snapshots \
+            --out fund-extracts/funds.json
+
+      - name: Push to fund-extracts
+        run: |
           cp schemas/fund_snapshot.json schemas/funds_manifest.json fund-extracts/schemas/
           cd fund-extracts
           git config user.name "github-actions[bot]"
@@ -115,6 +144,7 @@ jobs:
   securities:
     name: Refresh securities registry
     needs: commit
+    if: ${{ !cancelled() && needs.commit.result == 'success' }}
     runs-on: ubuntu-latest
     # First-run bootstrap of an empty registry takes ~15-20 min for
     # ~3,500 EDGAR calls. Steady-state runs are seconds (in-TTL cache).
