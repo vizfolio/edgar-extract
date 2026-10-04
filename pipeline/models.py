@@ -21,9 +21,10 @@ from pydantic import BaseModel, ConfigDict, Field
 # Schema version constants. Bump in lockstep with the corresponding builder.
 # ---------------------------------------------------------------------------
 
-FUND_SNAPSHOT_SCHEMA_VERSION = "0.5"
+FUND_SNAPSHOT_SCHEMA_VERSION = "0.6"
 FUNDS_MANIFEST_SCHEMA_VERSION = "1"
 SECURITY_SCHEMA_VERSION = "0.1"
+MONEY_MARKET_SCHEMA_VERSION = "1"
 
 
 class _Strict(BaseModel):
@@ -110,6 +111,19 @@ class CreditSpreadRisk(_Strict):
     non_investment_grade: Optional[PeriodBucket] = None
 
 
+class MoneyMarketInfo(_Strict):
+    """What a money market fund's latest Form N-MFP says about its price per share.
+
+    `seeks_stable_price` is the fund's own statement (N-MFP `seekStablePricePerShare`): government and retail
+    funds hold a stable $1.00; institutional prime and tax-exempt funds have floated since 2016.
+    """
+
+    category: Optional[str] = None
+    seeks_stable_price: bool = False
+    stable_price_per_share: Optional[float] = None
+    is_retail: Optional[bool] = None
+
+
 class Fund(_Strict):
     name: Optional[str] = None
     series_id: str
@@ -135,10 +149,12 @@ class Fund(_Strict):
     monthly_returns: list[MonthlyReturn] = Field(default_factory=list)
     share_classes: list[ShareClass] = Field(default_factory=list)
     fees_source_filings: list[FeesSourceFiling] = Field(default_factory=list)
+    # Set only for money market funds (N-MFP filers); null for N-PORT funds.
+    money_market: Optional[MoneyMarketInfo] = None
 
 
 class FundSnapshot(_Strict):
-    schema_version: Literal["0.5"] = FUND_SNAPSHOT_SCHEMA_VERSION
+    schema_version: Literal["0.6"] = FUND_SNAPSHOT_SCHEMA_VERSION
     generated_at: str
     fund: Fund
     holdings: list[Holding]
@@ -161,6 +177,32 @@ class FundsManifest(_Strict):
     schema_version: Literal["1"] = FUNDS_MANIFEST_SCHEMA_VERSION
     generated_at: str
     funds: list[FundEntry]
+
+
+# ---------------------------------------------------------------------------
+# Money market registry — every N-MFP filer, at the root of fund-extracts
+# ---------------------------------------------------------------------------
+
+class MoneyMarketClass(_Strict):
+    class_id: str
+    ticker: Optional[str] = None
+
+
+class MoneyMarketFund(MoneyMarketInfo):
+    series_id: str
+    name: Optional[str] = None
+    registrant_cik: Optional[str] = None
+    registrant_name: Optional[str] = None
+    as_of: str
+    source_filing: str
+    source_url: str
+    classes: list[MoneyMarketClass] = Field(default_factory=list)
+
+
+class MoneyMarketRegistry(_Strict):
+    schema_version: Literal["1"] = MONEY_MARKET_SCHEMA_VERSION
+    generated_at: str
+    funds: list[MoneyMarketFund]
 
 
 # ---------------------------------------------------------------------------

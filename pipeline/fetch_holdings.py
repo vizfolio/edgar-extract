@@ -23,7 +23,7 @@ import logging
 import sys
 from pathlib import Path
 
-from . import expenses, nport, transform
+from . import expenses, money_market, nport, transform
 
 
 def _read_gz(path: Path) -> dict:
@@ -35,6 +35,26 @@ def _write_gz(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(path, "wt", compresslevel=6) as f:
         json.dump(data, f)
+
+
+MMF_FORMS = ["N-MFP3", "N-MFP2", "N-MFP"]
+
+
+def _read_money_market(cik: str, accession_no: str) -> dict | None:
+    """The N-MFP body's fields (see pipeline.money_market.parse_nmfp), or None if it can't be read."""
+    import requests
+
+    log = logging.getLogger("fetch_holdings")
+    url = money_market.filing_url(cik, accession_no)
+    try:
+        resp = requests.get(url, headers={"User-Agent": nport.user_agent()}, timeout=60)
+    except requests.RequestException as e:
+        log.warning("could not fetch %s: %s", url, e)
+        return None
+    if resp.status_code != 200:
+        log.warning("could not fetch %s: HTTP %s", url, resp.status_code)
+        return None
+    return money_market.parse_nmfp(resp.text)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,14 +90,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     log = logging.getLogger("fetch_holdings")
 
-    if args.is_cash:
+    is_cash = args.is_cash
+    if is_cash:
         log.info("locating latest N-MFP for cash series=%s", args.series_id)
-        filing, meta = nport.find_latest(
-            args.cik, args.series_id, form=["N-MFP3", "N-MFP2", "N-MFP"]
-        )
+        filing, meta = nport.find_latest(args.cik, args.series_id, form=MMF_FORMS)
     else:
         log.info("locating latest NPORT-P for series=%s", args.series_id)
-        filing, meta = nport.find_latest(args.cik, args.series_id)
+        try:
+            filing, meta = nport.find_latest(args.cik, args.series_id)
+        except LookupError:
+            # Money market funds file N-MFP instead of N-PORT: a series with N-MFP filings is one, so it no
+            # longer needs a hand-set --is-cash flag.
+            log.info("no NPORT-P; trying N-MFP (money market fund) for series=%s", args.series_id)
+            filing, meta = nport.find_latest(args.cik, args.series_id, form=MMF_FORMS)
+            is_cash = True
     log.info(
         "latest filing: %s (period %s)", meta["accession_no"], meta["period_of_report"]
     )
@@ -99,13 +125,18 @@ def main(argv: list[str] | None = None) -> int:
             meta["accession_no"],
         )
 
-    if args.is_cash:
+    if is_cash:
         parsed = nport.parse_cash_stub(
             filing,
             series_id=args.series_id,
             series_name=args.fund_name,
             registrant_cik=args.cik,
         )
+        # The stable-price facts consumers need to value the fund ($1.00 or floating).
+        nmfp = _read_money_market(args.cik, meta["accession_no"])
+        if nmfp is not None:
+            parsed["fund"]["money_market"] = money_market.money_market_info(nmfp)
+            parsed["fund"]["name"] = parsed["fund"]["name"] or nmfp.get("name")
     else:
         parsed = nport.parse(filing, ticker_index_path=args.ticker_index)
     parsed["filing"] = {

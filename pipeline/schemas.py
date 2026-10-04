@@ -25,6 +25,7 @@ _TARGETS = [
     ("fund_snapshot.json", models.FundSnapshot),
     ("funds_manifest.json", models.FundsManifest),
     ("security.json", models.Security),
+    ("money_market_funds.json", models.MoneyMarketRegistry),
 ]
 
 

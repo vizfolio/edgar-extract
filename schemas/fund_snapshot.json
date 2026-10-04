@@ -182,6 +182,17 @@
           "title": "Is Final Filing",
           "type": "boolean"
         },
+        "money_market": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoneyMarketInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "monthly_returns": {
           "items": {
             "$ref": "#/$defs/MonthlyReturn"
@@ -565,6 +576,55 @@
       "title": "InterestRateRisk",
       "type": "object"
     },
+    "MoneyMarketInfo": {
+      "additionalProperties": false,
+      "description": "What a money market fund's latest Form N-MFP says about its price per share.\n\n`seeks_stable_price` is the fund's own statement (N-MFP `seekStablePricePerShare`): government and retail\nfunds hold a stable $1.00; institutional prime and tax-exempt funds have floated since 2016.",
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        },
+        "is_retail": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Retail"
+        },
+        "seeks_stable_price": {
+          "default": false,
+          "title": "Seeks Stable Price",
+          "type": "boolean"
+        },
+        "stable_price_per_share": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stable Price Per Share"
+        }
+      },
+      "title": "MoneyMarketInfo",
+      "type": "object"
+    },
     "MonthlyReturn": {
       "additionalProperties": false,
       "properties": {
@@ -732,8 +792,8 @@
       "type": "array"
     },
     "schema_version": {
-      "const": "0.5",
-      "default": "0.5",
+      "const": "0.6",
+      "default": "0.6",
       "title": "Schema Version",
       "type": "string"
     }

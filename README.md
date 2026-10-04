@@ -67,6 +67,27 @@ per fund:
 Consumers read `funds.json` once at startup and construct snapshot URLs
 as `{series_id}/{latest_period}.json.gz`.
 
+### Building the money market registry
+
+Money market funds file Form N-MFP instead of N-PORT. `fetch_holdings` detects them automatically (a series with
+no NPORT-P but an N-MFP is a money market fund — `is_cash` in `config/funds.json` is no longer required) and adds
+a `money_market` block to their snapshot: `category`, `seeks_stable_price`, `stable_price_per_share`, `is_retail`.
+
+Separately, a registry of **every** money market fund — not just the configured ones — is built from the latest
+N-MFP3 filings (found via EDGAR's quarterly form index) joined with SEC's mutual-fund ticker map
+(`company_tickers_mf.json`):
+
+```bash
+nix develop -c python -m pipeline.money_market \
+  --previous fund-extracts/money_market_funds.json \
+  --out data/money_market_funds.json
+```
+
+Output: `money_market_funds.json` (~330 funds, ~900 tickers), schema `schemas/money_market_funds.json`. Consumers
+use it to tell which tickers are money market funds and whether each keeps a stable price (and what it is — usually
+$1.00, but some funds and ETFs use $10 or $100). `--previous` skips filings already parsed; `--limit N` is for
+smoke tests. Unit tests: `nix develop -c python -m unittest discover -s tests`.
+
 ### Building the securities registry
 
 Fund snapshots reference each holding's issuer by `issuer_cik` rather

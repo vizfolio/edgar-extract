@@ -116,6 +116,9 @@ def to_json1(parsed: dict) -> dict:
         fees_source_filings=[
             models.FeesSourceFiling(**s) for s in fund_in.get("fees_source_filings", [])
         ],
+        money_market=(
+            models.MoneyMarketInfo(**fund_in["money_market"]) if fund_in.get("money_market") else None
+        ),
     )
 
     snapshot = models.FundSnapshot(

@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "MoneyMarketClass": {
+      "additionalProperties": false,
+      "properties": {
+        "class_id": {
+          "title": "Class Id",
+          "type": "string"
+        },
+        "ticker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ticker"
+        }
+      },
+      "required": [
+        "class_id"
+      ],
+      "title": "MoneyMarketClass",
+      "type": "object"
+    },
+    "MoneyMarketFund": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Category"
+        },
+        "classes": {
+          "items": {
+            "$ref": "#/$defs/MoneyMarketClass"
+          },
+          "title": "Classes",
+          "type": "array"
+        },
+        "is_retail": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Retail"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "registrant_cik": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Cik"
+        },
+        "registrant_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrant Name"
+        },
+        "seeks_stable_price": {
+          "default": false,
+          "title": "Seeks Stable Price",
+          "type": "boolean"
+        },
+        "series_id": {
+          "title": "Series Id",
+          "type": "string"
+        },
+        "source_filing": {
+          "title": "Source Filing",
+          "type": "string"
+        },
+        "source_url": {
+          "title": "Source Url",
+          "type": "string"
+        },
+        "stable_price_per_share": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stable Price Per Share"
+        }
+      },
+      "required": [
+        "series_id",
+        "as_of",
+        "source_filing",
+        "source_url"
+      ],
+      "title": "MoneyMarketFund",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "funds": {
+      "items": {
+        "$ref": "#/$defs/MoneyMarketFund"
+      },
+      "title": "Funds",
+      "type": "array"
+    },
+    "generated_at": {
+      "title": "Generated At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "generated_at",
+    "funds"
+  ],
+  "title": "MoneyMarketRegistry",
+  "type": "object"
+}

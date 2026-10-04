@@ -127,13 +127,26 @@ jobs:
             --snapshots fund-extracts/snapshots \
             --out fund-extracts/funds.json
 
+      - name: Build money market registry
+        # Every N-MFP filer, not just the configured funds: tickers + stable-price facts consumers use to value
+        # money market funds. Reuses the published registry so filings already parsed aren't fetched again.
+        # A failure here mustn't block publishing the fund snapshots above.
+        continue-on-error: true
+        env:
+          EDGAR_USER_AGENT: ${{ secrets.EDGAR_USER_AGENT }}
+        run: |
+          nix develop -c python -m pipeline.money_market \
+            --previous fund-extracts/money_market_funds.json \
+            --out fund-extracts/money_market_funds.json
+
       - name: Push to fund-extracts
         run: |
-          cp schemas/fund_snapshot.json schemas/funds_manifest.json fund-extracts/schemas/
+          cp schemas/fund_snapshot.json schemas/funds_manifest.json schemas/money_market_funds.json fund-extracts/schemas/
           cd fund-extracts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add snapshots/ funds.json schemas/
+          [ -f money_market_funds.json ] && git add money_market_funds.json
           if git diff --cached --quiet; then
             echo "No changes to commit to fund-extracts"
           else
